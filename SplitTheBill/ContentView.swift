@@ -1,22 +1,86 @@
+
 //
 //  ContentView.swift
-//  SplitTheBill
+//  WeSplit
 //
-//  Created by Mike Powar on 2023-07-05.
+//  Created by Mike Powar on 2023-06-28.
 //
 
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
-        }
-        .padding()
+    // 3 states we need to track:
+    @State private var checkAmount = 0.0
+    //2 sets to 3rd row = 4 people
+    @State private var numberOfPeople = 2
+    @State private var tipPercentage = 20
+    
+    // Focus on Amount to assist with keyPad disappearing when not needed
+    @FocusState private var amountIsFocused: Bool
+    
+    let tipPercentages = [10, 15, 20, 25, 0]
+    
+    var totalPerPerson: Double {
+        // calculate total per person here
+        
+        // people count - cast to Double
+        let peopleCount = Double(numberOfPeople + 2)
+        // tip Selection - cast to double
+        let tipSelection = Double(tipPercentage)
+        
+        //Then calculate - tipValue, Grand Total, and amountPerPerson
+        let tipValue = checkAmount  / 100 * tipSelection
+        let grandTotal = checkAmount + tipValue
+        let amountPerPerson = grandTotal / peopleCount
+             
+        return amountPerPerson
     }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section {
+                    TextField("Amount", value: $checkAmount, format:
+                            .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                    .keyboardType(.decimalPad)
+                    .focused($amountIsFocused)
+                    
+                    Picker("Number of people", selection: $numberOfPeople) {
+                        ForEach(2..<100) {
+                            Text("\($0) people")
+                        }
+                    }
+                }
+                
+                Section {
+                    Picker("Tip percentage", selection: $tipPercentage) {
+                        ForEach(tipPercentages, id: \.self) {
+                            Text($0, format: .percent)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("How much tip do you want to leave?")
+                }
+                
+                Section {
+                    Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                }
+            }
+            .navigationTitle("WeSplit")
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    // System convention - pushing "done" button to right
+                    Spacer()
+                    
+                    Button("Done") {
+                        amountIsFocused = false
+                    }
+                }
+            }
+        }
+    }
+        
 }
 
 struct ContentView_Previews: PreviewProvider {
